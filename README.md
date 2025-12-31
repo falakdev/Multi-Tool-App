@@ -52,16 +52,7 @@ npm run dev
 - **Student**: `student@example.com` / `student123`
 - **Vendor**: `vendor@example.com` / `vendor123`
 
-## Deployment
 
-### Deploy to Vercel
-
-1. Push your code to GitHub
-2. Import your repository in [Vercel](https://vercel.com)
-3. Vercel will automatically detect Vite and configure the build settings
-4. Deploy!
-
-The project includes a `vercel.json` configuration file for optimal deployment.
 
 ### Build for Production
 
