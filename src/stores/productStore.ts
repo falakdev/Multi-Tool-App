@@ -35,7 +35,7 @@ export const useProductStore = create<ProductState>()(
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        vendorId: "vendor-1", // Default vendor
+        vendorId: "3", // Default to existing vendor user id (Mike Wilson)
       })),
       addProduct: (productData) => {
         const newProduct: Product = {

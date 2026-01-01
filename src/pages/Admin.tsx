@@ -16,7 +16,9 @@ import { Link } from "react-router-dom";
 export function Admin() {
   const { user } = useAuthStore();
   const { addCourse, getAllCourses } = useCourseStore();
-  const { addProduct } = useProductStore();
+  const { addProduct, getActiveProducts } = useProductStore();
+  const demoCourses = getAllCourses();
+  const demoProducts = getActiveProducts();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [formType, setFormType] = useState<"course" | "product">("course");
   const [formData, setFormData] = useState({
@@ -318,6 +320,41 @@ export function Admin() {
                 <Line type="monotone" dataKey="orders" stroke="#82ca9d" name="Orders" />
               </LineChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+      >
+        <Card className={`${glassmorphism}`}>
+          <CardHeader>
+            <CardTitle>Demo Data</CardTitle>
+            <CardDescription>Sample courses and products visible to all accounts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <h4 className="font-semibold mb-2">Courses</h4>
+                {demoCourses.slice(0, 4).map((c) => (
+                  <div key={c.id} className="p-3 rounded-lg border border-border mb-2">
+                    <p className="font-medium">{c.title}</p>
+                    <p className="text-sm text-muted-foreground">{c.instructor} • {c.duration} • ${c.price}</p>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Products</h4>
+                {demoProducts.slice(0, 6).map((p) => (
+                  <div key={p.id} className="p-3 rounded-lg border border-border mb-2">
+                    <p className="font-medium">{p.name}</p>
+                    <p className="text-sm text-muted-foreground">{p.category} • ${p.price}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
