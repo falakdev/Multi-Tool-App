@@ -3,13 +3,14 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Play, CheckCircle2, Clock, BookOpen, User, ArrowLeft, Target, Award, TrendingUp } from "lucide-react";
-import { courses } from "../lib/data";
+import { useCourseStore } from "../stores/courseStore";
 import { glassmorphism } from "../lib/utils";
 
 export function CourseDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const course = courses.find((c) => c.id === id);
+  const { getCourseById } = useCourseStore();
+  const course = id ? getCourseById(id) : undefined;
 
   if (!course) {
     return (

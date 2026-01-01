@@ -3,12 +3,14 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Play, CheckCircle2, Clock, BookOpen, User } from "lucide-react";
-import { courses } from "../lib/data";
+import { useCourseStore } from "../stores/courseStore";
 import { glassmorphism } from "../lib/utils";
 
 export function LMS() {
+  const { getPublishedCourses, getCourseById } = useCourseStore();
+  const publishedCourses = getPublishedCourses();
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const course = selectedCourse ? courses.find((c) => c.id === selectedCourse) : courses[0];
+  const course = selectedCourse ? getCourseById(selectedCourse) : publishedCourses[0];
 
   const lessons = [
     { id: "1", title: "Introduction to React Hooks", duration: "15:30", completed: true },
@@ -31,13 +33,13 @@ export function LMS() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {courses.map((c) => (
+            {publishedCourses.map((c) => (
               <motion.button
                 key={c.id}
                 onClick={() => setSelectedCourse(c.id)}
                 whileHover={{ x: 4 }}
                 className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                  selectedCourse === c.id || (!selectedCourse && c.id === courses[0].id)
+                  selectedCourse === c.id || (!selectedCourse && c.id === publishedCourses[0]?.id)
                     ? "bg-primary/10 border-primary"
                     : "bg-background border-border hover:bg-accent"
                 }`}

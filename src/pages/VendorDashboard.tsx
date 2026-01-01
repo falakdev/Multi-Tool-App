@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Package, ShoppingCart, DollarSign, TrendingUp, Plus, CheckCircle2, Truck } from "lucide-react";
-import { products } from "../lib/data";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Package, ShoppingCart, DollarSign, TrendingUp, Plus, CheckCircle2, Truck, Upload } from "lucide-react";
+import { useProductStore } from "../stores/productStore";
 import { useOrderStore } from "../stores/orderStore";
 import { useAuthStore } from "../stores/authStore";
 import { glassmorphism } from "../lib/utils";
@@ -10,10 +13,23 @@ import { glassmorphism } from "../lib/utils";
 export function VendorDashboard() {
   const { user } = useAuthStore();
   const { orders, updateOrderStatus } = useOrderStore();
-  const vendorProducts = products.slice(0, 4);
+  const { getProductsByVendor, addProduct } = useProductStore();
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [productForm, setProductForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    image: "",
+    category: "",
+    stock: "",
+  });
+  
+  // Get products for this vendor
+  const vendorId = user?.id || "vendor-1";
+  const vendorProducts = getProductsByVendor(vendorId);
   
   // Get orders for this vendor
-  const vendorOrders = orders.filter((order) => order.vendorId === "vendor-1" || !order.vendorId);
+  const vendorOrders = orders.filter((order) => order.vendorId === vendorId || !order.vendorId);
 
   const stats = [
     { name: "Total Products", value: "24", icon: Package, color: "text-blue-600" },
@@ -163,35 +179,147 @@ export function VendorDashboard() {
                   <CardTitle>Product Inventory</CardTitle>
                   <CardDescription>Manage your products</CardDescription>
                 </div>
-                <Button size="sm">
+                <Button size="sm" onClick={() => setShowAddProduct(!showAddProduct)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Product
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {vendorProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center gap-4 p-4 rounded-lg border border-border"
+              {showAddProduct && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 border border-border rounded-lg bg-muted/50"
+                >
+                  <h4 className="font-semibold mb-4">Add New Product</h4>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      addProduct({
+                        name: productForm.name,
+                        description: productForm.description,
+                        price: parseFloat(productForm.price) || 0,
+                        image: productForm.image || "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600&h=600&fit=crop",
+                        category: productForm.category || "General",
+                        stock: parseInt(productForm.stock) || 0,
+                        vendorId: vendorId,
+                      });
+                      setProductForm({
+                        name: "",
+                        description: "",
+                        price: "",
+                        image: "",
+                        category: "",
+                        stock: "",
+                      });
+                      setShowAddProduct(false);
+                    }}
+                    className="space-y-3"
                   >
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-16 h-16 rounded object-cover"
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium">{product.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Stock: {product.stock} • ${product.price}
-                      </p>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="prod-name">Product Name</Label>
+                        <Input
+                          id="prod-name"
+                          value={productForm.name}
+                          onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="prod-price">Price</Label>
+                        <Input
+                          id="prod-price"
+                          type="number"
+                          step="0.01"
+                          value={productForm.price}
+                          onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                          required
+                        />
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Edit
-                    </Button>
-                  </div>
-                ))}
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="prod-category">Category</Label>
+                        <Input
+                          id="prod-category"
+                          value={productForm.category}
+                          onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="prod-stock">Stock</Label>
+                        <Input
+                          id="prod-stock"
+                          type="number"
+                          value={productForm.stock}
+                          onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="prod-desc">Description</Label>
+                      <textarea
+                        id="prod-desc"
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={productForm.description}
+                        onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="prod-image">Image URL</Label>
+                      <Input
+                        id="prod-image"
+                        placeholder="https://images.unsplash.com/..."
+                        value={productForm.image}
+                        onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit" size="sm">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Add Product
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAddProduct(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+              <div className="space-y-4">
+                {vendorProducts.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No products yet. Add your first product!</p>
+                ) : (
+                  vendorProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="flex items-center gap-4 p-4 rounded-lg border border-border"
+                    >
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-16 h-16 rounded object-cover"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium">{product.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Stock: {product.stock} • ${product.price}
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

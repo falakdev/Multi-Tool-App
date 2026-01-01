@@ -4,10 +4,11 @@ import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Search, Plus, Edit, Trash2, Package } from "lucide-react";
-import { products } from "../lib/data";
+import { useProductStore } from "../stores/productStore";
 import { glassmorphism } from "../lib/utils";
 
 export function AdminProducts() {
+  const { products, deleteProduct } = useProductStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
@@ -95,7 +96,15 @@ export function AdminProducts() {
                       <Button variant="outline" size="sm">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm("Are you sure you want to delete this product?")) {
+                            deleteProduct(product.id);
+                          }
+                        }}
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>

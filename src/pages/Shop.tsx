@@ -4,8 +4,8 @@ import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { ShoppingBag, Search, Filter, Star, CheckCircle2 } from "lucide-react";
-import { products } from "../lib/data";
 import { useCartStore } from "../stores/cartStore";
+import { useProductStore } from "../stores/productStore";
 import { glassmorphism } from "../lib/utils";
 
 export function Shop() {
@@ -13,6 +13,10 @@ export function Shop() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
   const { addItem } = useCartStore();
+  const { getActiveProducts } = useProductStore();
+  
+  // Get only active products
+  const products = getActiveProducts();
 
   const handleAddToCart = (product: typeof products[0]) => {
     addItem({

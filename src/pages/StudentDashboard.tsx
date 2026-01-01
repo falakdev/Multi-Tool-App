@@ -1,19 +1,36 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Play, Clock, ShoppingBag } from "lucide-react";
-import { courses, products } from "../lib/data";
 import { useAuthStore } from "../stores/authStore";
 import { useCartStore } from "../stores/cartStore";
+import { useCourseStore } from "../stores/courseStore";
+import { useProductStore } from "../stores/productStore";
 import { glassmorphism } from "../lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 
 export function StudentDashboard() {
   const { user } = useAuthStore();
   const { addItem } = useCartStore();
+  const { getPublishedCourses, getAllCourses } = useCourseStore();
+  const { getActiveProducts } = useProductStore();
   const navigate = useNavigate();
-  const enrolledCourses = courses.slice(0, 3);
-  const featuredProducts = products.slice(0, 4);
+  
+  // Get only published and active courses
+  const allPublishedCourses = getPublishedCourses();
+  const enrolledCourses = allPublishedCourses.slice(0, 3);
+  
+  // Get only active products
+  const allActiveProducts = getActiveProducts();
+  const featuredProducts = allActiveProducts.slice(0, 4);
+
+  // Debug: Log courses on mount and when they change
+  useEffect(() => {
+    const allCourses = getAllCourses();
+    console.log("Student Dashboard - All courses:", allCourses);
+    console.log("Student Dashboard - Published courses:", allPublishedCourses);
+  }, [allPublishedCourses, getAllCourses]);
 
   return (
     <div className="space-y-8">
@@ -24,9 +41,17 @@ export function StudentDashboard() {
         </p>
       </div>
 
+      {/* All Courses Section */}
+      {allPublishedCourses.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-4">All Available Courses ({allPublishedCourses.length})</h2>
+        </div>
+      )}
+
       {/* Progress Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        {enrolledCourses.map((course, index) => (
+        {enrolledCourses.length > 0 ? (
+          enrolledCourses.map((course, index) => (
           <motion.div
             key={course.id}
             initial={{ opacity: 0, y: 20 }}
@@ -80,8 +105,60 @@ export function StudentDashboard() {
               </CardContent>
             </Card>
           </motion.div>
-        ))}
+          ))
+        ) : (
+          <div className="col-span-3 text-center py-12">
+            <p className="text-muted-foreground">No courses available yet. Check back soon!</p>
+          </div>
+        )}
       </div>
+
+      {/* Show all courses if more than 3 */}
+      {allPublishedCourses.length > 3 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className={`${glassmorphism}`}>
+            <CardHeader>
+              <CardTitle>All Courses</CardTitle>
+              <CardDescription>Browse all available courses</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {allPublishedCourses.slice(3).map((course, index) => (
+                  <motion.div
+                    key={course.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + index * 0.1 }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <Card className="overflow-hidden cursor-pointer" onClick={() => navigate(`/course/${course.id}`)}>
+                      <div className="relative h-32 overflow-hidden">
+                        <img
+                          src={course.thumbnail}
+                          alt={course.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold mb-1">{course.title}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{course.description}</p>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{course.instructor}</span>
+                          <span>${course.price}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Video Player UI */}
       <motion.div

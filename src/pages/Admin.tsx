@@ -9,12 +9,28 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { users, revenueData } from "../lib/data";
 import { glassmorphism } from "../lib/utils";
 import { useAuthStore } from "../stores/authStore";
+import { useCourseStore } from "../stores/courseStore";
+import { useProductStore } from "../stores/productStore";
 import { Link } from "react-router-dom";
 
 export function Admin() {
   const { user } = useAuthStore();
+  const { addCourse, getAllCourses } = useCourseStore();
+  const { addProduct } = useProductStore();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [formType, setFormType] = useState<"course" | "product">("course");
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    price: "",
+    image: "",
+    instructor: "",
+    duration: "",
+    lessons: "",
+    category: "",
+    stock: "",
+  });
+  const [successMessage, setSuccessMessage] = useState("");
 
   const stats = [
     { name: "Total Users", value: "1,234", icon: Users, color: "text-blue-600", change: "+12%" },
@@ -65,6 +81,17 @@ export function Admin() {
         })}
       </div>
 
+      {/* Success Message */}
+      {successMessage && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-600"
+        >
+          {successMessage}
+        </motion.div>
+      )}
+
       {/* Upload Form */}
       {showUploadForm && (
         <motion.div
@@ -94,35 +121,171 @@ export function Admin() {
               </div>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (formType === "course") {
+                    const newCourse = {
+                      title: formData.title,
+                      description: formData.description,
+                      thumbnail: formData.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=400&fit=crop",
+                      price: parseFloat(formData.price) || 0,
+                      instructor: formData.instructor || "Admin Instructor",
+                      duration: formData.duration || "10 hours",
+                      lessons: parseInt(formData.lessons) || 20,
+                    };
+                    addCourse(newCourse);
+                    const allCourses = getAllCourses();
+                    console.log("Course added! Total courses now:", allCourses.length);
+                    setSuccessMessage(`Course "${formData.title}" added successfully! Total courses: ${allCourses.length}`);
+                    setTimeout(() => setSuccessMessage(""), 5000);
+                  } else {
+                    addProduct({
+                      name: formData.title,
+                      description: formData.description,
+                      price: parseFloat(formData.price) || 0,
+                      image: formData.image || "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600&h=600&fit=crop",
+                      category: formData.category || "General",
+                      stock: parseInt(formData.stock) || 0,
+                    });
+                  }
+                  setFormData({
+                    title: "",
+                    description: "",
+                    price: "",
+                    image: "",
+                    instructor: "",
+                    duration: "",
+                    lessons: "",
+                    category: "",
+                    stock: "",
+                  });
+                  setShowUploadForm(false);
+                }}
+                className="space-y-4"
+              >
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="title">Title</Label>
-                    <Input id="title" placeholder={`Enter ${formType} title`} />
+                    <Input
+                      id="title"
+                      placeholder={`Enter ${formType} title`}
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="price">Price</Label>
-                    <Input id="price" type="number" placeholder="0.00" />
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      required
+                    />
                   </div>
                 </div>
+                {formType === "course" && (
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="instructor">Instructor</Label>
+                      <Input
+                        id="instructor"
+                        placeholder="Instructor name"
+                        value={formData.instructor}
+                        onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="duration">Duration</Label>
+                      <Input
+                        id="duration"
+                        placeholder="10 hours"
+                        value={formData.duration}
+                        onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lessons">Lessons</Label>
+                      <Input
+                        id="lessons"
+                        type="number"
+                        placeholder="20"
+                        value={formData.lessons}
+                        onChange={(e) => setFormData({ ...formData, lessons: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+                {formType === "product" && (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category</Label>
+                      <Input
+                        id="category"
+                        placeholder="Accessories, Electronics, etc."
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stock">Stock</Label>
+                      <Input
+                        id="stock"
+                        type="number"
+                        placeholder="0"
+                        value={formData.stock}
+                        onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
                   <textarea
                     id="description"
                     className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     placeholder={`Enter ${formType} description`}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="image">Image URL</Label>
-                  <Input id="image" placeholder="https://images.unsplash.com/..." />
+                  <Input
+                    id="image"
+                    placeholder="https://images.unsplash.com/..."
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  />
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit">
                     <Upload className="h-4 w-4 mr-2" />
                     Upload {formType === "course" ? "Course" : "Product"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowUploadForm(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowUploadForm(false);
+                      setFormData({
+                        title: "",
+                        description: "",
+                        price: "",
+                        image: "",
+                        instructor: "",
+                        duration: "",
+                        lessons: "",
+                        category: "",
+                        stock: "",
+                      });
+                    }}
+                  >
                     Cancel
                   </Button>
                 </div>
